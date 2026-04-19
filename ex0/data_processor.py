@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Dict, Union
 
+
 class DataProcessor(ABC):
 
     def __init__(self) -> None:
@@ -33,11 +34,13 @@ class DataProcessor(ABC):
         """
         if not self._storage:
             raise IndexError("No data available in the processor.")
-        
-        # Calculate the rank based on current count and remaining items.
+
+        # Calculate the rank based on the global original count
+        #  and the remaining items (length of storage) always being the
+        # first rank at '1'.
         rank = self._count - len(self._storage) + 1
-        # FIFO extraction: remove and return the first item
-        item = self._storage.pop(0) --> PUEDO USAR ESTO? 
+        # FIFO extraction: removes and returns the first item
+        item = self._storage.pop(0)
         return rank, item
 
 
@@ -46,20 +49,22 @@ class NumericProcessor(DataProcessor):
     Handles int, float, and lists of numeric types.
     """
     def validate(self, data: Any) -> bool:
-        # Check for single numeric (if the data fits into the specified types = TRUE)
+        # Check for single numeric (if the data fits into the
+        #  specified types = TRUE)
         if isinstance(data, (int, float)):
             return True
         if isinstance(data, list):
-            # Determines True/False if all the data fits in the statement of being a numeric type
+            # Determines True/False if all the data fits in the statement
+            #  of being a numeric type
             return all(isinstance(i, (int, float)) for i in data)
         return False
-        
+
     def ingest(self, data: Union[int, float, List[Union[int, float]]]) -> None:
         if not self.validate(data):
             # Raise exception if data is invalid
             raise ValueError("Improper numeric data")
 
-        #Converts the data into a list if it is not a list already
+        # Converts the data into a list if it is not a list already
         items = data if isinstance(data, list) else [data]
         for val in items:
             # Stores the data converting it into str
@@ -76,15 +81,16 @@ class TextProcessor(DataProcessor):
         if isinstance(data, str):
             return True
         if isinstance(data, list):
-            # Determines True/False if all the data in the lists fits in the statement of being a str
+            # Determines True/False if all the data in the lists fits in
+            #  the statement of being a str
             return all(isinstance(x, str) for x in data)
         return False
-    
+
     def ingest(self, data: Union[str, List[str]]) -> None:
         # Raises error if the data to be stored is not valid
         if not self.validate(data):
             raise ValueError("Improper text data")
-        
+
         # Converts the data into a list if it is not a list already
         items = data if isinstance(data, list) else [data]
         # Stores the data and tracks their position(determines their rank)
@@ -92,7 +98,7 @@ class TextProcessor(DataProcessor):
             # Stores the data converting it into str
             self._storage.append(val)
             # Tracks the elements stored, which translates into their rank
-            self._count += 1 
+            self._count += 1
 
 
 class LogProcessor(DataProcessor):
@@ -104,57 +110,85 @@ class LogProcessor(DataProcessor):
         # Validate dictionary keys and values are strings
         if isinstance(data, dict):
             # Checks that both the key and value returned are str
-            return all(isinstance(x, str) and isinstance(y, str) for x, y in data.items()) --> PUEDO USAR ESTO? 
-       
+            return all(isinstance(x, str) and isinstance(y, str) for
+                       x, y in data.items())
+
         if isinstance(data, list):
-            # to each dictionary in the list, pass the actual function to validate
+            # to each dictionary in the list, pass the actual function
+            #  to validate
             return all(self.validate(d) for d in data)
-        
+
         return False
 
-
-    def ingest(self, data: Union[Dict[str, str], List[Dict[str, str]]]) -> None:
+    def ingest(self, data: Union[Dict[str, str],
+                                 List[Dict[str, str]]]) -> None:
         # Raises error if the data to be stored is not valid
         if not self.validate(data):
             raise ValueError("Improper log data")
-        
 
         entries = data if isinstance(data, list) else [data]
         for i in entries:
-            # For each entry in the dictionaries stored in data...
-            for key, value in i.items():
-                # Stores one entry of the dictionary with the dict format and together
-                self._storage.append(f"{key}: {value}")
-                self._count += 1
+            # Extract the data of the 'log_level' entry in the dict
+            level = i.get('log_level', 'UNKNOWN')
+            # If 'log_level' is not found, returns 'UNKNOWN' as the value
+
+            # Extract the data of the 'log_message' entry in the dict
+            message = i.get('log_message', 'No message')
+            # If 'log_message' is not found, returns 'No message' as the value
+            self._storage.append(f"{level}: {message}")
+            self._count += 1
 
 
 if __name__ == "__main__":
     # Test script to demonstrate architecture functionality
-    print("=== Code Nexus Data Processor ===")
+    print("=== Code Nexus Data Processor ===\n")
 
-    # 1. Instantiate specialized classes
+    # Instantiate instances of specialized classes
     num_p = NumericProcessor()
     txt_p = TextProcessor()
     log_p = LogProcessor()
 
-    # 2. Test validation[cite: 119].
-    print(f"Validating 42 in Numeric: {num_p.validate(42)}")
-    print(f"Validating 'Hello' in Numeric: {num_p.validate('Hello')}")
+    # Test validating the NumericProcessor class
+    print("Testing Numeric Processor...")
+    print(f"Trying to validate input '42': {num_p.validate(42)}")
+    print(f"Trying to validate input 'Hello': {num_p.validate('Hello')}")
 
-    # 3. Test exception on invalid ingestion without validation
+    # Test exception on invalid ingestion without validation
+    print("Test invalid ingestion of string 'foo' without prior validation:")
     try:
         # This will trigger a mypy warning on purpose
-        num_p.ingest("Invalid Data")  # type: ignore
+        num_p.ingest("foo")  # type: ignore
     except ValueError as e:
         print(f"Got exception: {e}")
 
-    # 4. Ingest and extract data
-    num_p.ingest([1, 2, 3])
-    log_p.ingest({"NOTICE": "Connection to server"})
+    # Ingest and extract data
+    num_p.ingest([1, 2, 3, 4, 5])
+    print("Processing data: [1, 2, 3, 4, 5]")
+    # Demonstrate FIFO output
+    print("Extracting 3 values...")
+    for _ in range(3):
+        rank, val = num_p.output()
+        print(f"Numeric value {rank - 1}: {val}")
 
-    # Demonstrate FIFO output[cite: 122].
-    rank, val = num_p.output()
-    print(f"Numeric value {rank-1}: {val}")
-    
-    log_rank, log_val = log_p.output()
-    print(f"Log entry {log_rank-1}: {log_val}")
+    print("\nTesting Text Processor...")
+    print(f"Trying to validate input '42': {txt_p.validate(42)}")
+
+    t_list = ['Hello', 'Nexus', 'World']
+    txt_p.ingest(t_list)
+    print("Processing data: ['Hello', 'Nexus', 'World']")
+    print("Extracting 1 value...")
+    rank, val = txt_p.output()
+    print(f"Text value {rank-1}: {val}")
+
+    print("\nTesting Log Processor...")
+    print(f"Trying to validate input 'Hello': {log_p.validate('Hello')}")
+
+    l_dict = [{'log_level': 'NOTICE', 'log_message': 'Connection to server'},
+              {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}]
+    print(f"Processing data: {l_dict}")
+
+    log_p.ingest(l_dict)
+    print("Extracting 2 values...")
+    for _ in range(2):
+        rank, val = log_p.output()
+        print(f"Numeric value {rank - 1}: {val}")
