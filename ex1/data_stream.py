@@ -172,8 +172,9 @@ class DataStream:
 
         print("== DataStream statistics ==")
         for proc in self.processors:
-            # For whichever class, obtains its name
-            name = proc.__class__.__name__.replace("Processor", "Processor")
+            # For whichever class, obtains its name and puts
+            #  the second argument in the code 
+            name = proc.__class__.__name__.replace("Processor", " Processor")
             # total: self._count | remaining: len(self._storage)
             # Note: to access these attributes, make sure they are not
             # private(__) but protected (_), so the DataStream can see them
@@ -191,49 +192,39 @@ if __name__ == "__main__":
     print("Initialize Data Stream...")
     data_p.print_processors_stats()
 
+    # NUMERIC PROCESSORS---------------
     print("\nRegistering Numeric Processor\n")
-
     num_p = NumericProcessor()
+    data_p.register_processor(num_p)
+
     n_list = ['Hello world', [3.14, -1, 2.71],
               [{'log_level': 'WARNING',
                 'log_message': 'Telnet access! Use ssh instead'},
                {'log_level': 'INFO', 'log_message': 'User wil is connected'}],
               42, ['Hi', 'five']]
+
     print(f"Send first batch of data on stream: {n_list}")
-
-    # Indicate the kind of procedurement to implement (NumericProcessor,
-    #  TextProcessor, LogProcessor)
-    data_p.register_processor(num_p)
-    # Indicate the data to pass to the processor indicated
     data_p.process_stream(n_list)
-    # Printing the stats
     data_p.print_processors_stats()
 
-    print("\nRegistering other data processors\n")
-    print("Send the same batch again")
+    # DIFFERENT PROCESSOR ---------------------
+    print("\nRegistering other data processors")
     txt_p = TextProcessor()
-    data_p.register_processor(txt_p)
-    data_p.process_stream(n_list)
-    data_p.print_processors_stats()
-
     log_p = LogProcessor()
+    # Puts these new kinds of data to process in the same DataStream
+    data_p.register_processor(txt_p)
     data_p.register_processor(log_p)
+
+    print("Send the same batch again")
     data_p.process_stream(n_list)
     data_p.print_processors_stats()
 
-    # Consume element by sending them to output
     print("\nConsume some elements from the data processors: Numeric 3,"
           " Text 2, Log 1")
-    # Numeric
     for _ in range(3):
         num_p.output()
-
-    # Text
     for _ in range(2):
         txt_p.output()
-
-    # Log
     log_p.output()
 
-    # Mostrar estadísticas actualizadas
     data_p.print_processors_stats()
