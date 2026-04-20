@@ -173,7 +173,7 @@ class DataStream:
         print("== DataStream statistics ==")
         for proc in self.processors:
             # For whichever class, obtains its name and puts
-            #  the second argument in the code 
+            #  the second argument in the code
             name = proc.__class__.__name__.replace("Processor", " Processor")
             # total: self._count | remaining: len(self._storage)
             # Note: to access these attributes, make sure they are not
