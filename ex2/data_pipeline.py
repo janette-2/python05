@@ -250,9 +250,10 @@ if __name__ == "__main__":
     data_p.print_processors_stats()
 
     # Segundo envío de datos
-    n_list2 = [21, ['I love AI', 'LLMs are wonderful', 'Stay healthy'], 
-               [{'log_level': 'ERROR', 'log_message': '500 server crash'}, 
-                {'log_level': 'NOTICE', 'log_message': 'Certificate expires in 10 days'}], 
+    n_list2 = [21, ['I love AI', 'LLMs are wonderful', 'Stay healthy'],
+               [{'log_level': 'ERROR', 'log_message': '500 server crash'},
+                {'log_level': 'NOTICE', 'log_message': 'Certificate expires in'
+                ' 10 days'}],
                [32, 42, 64, 84, 128, 168], 'World hello']
 
     print(f"\nSend another batch of data: {n_list2}")
