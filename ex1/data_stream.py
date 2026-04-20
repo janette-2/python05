@@ -221,4 +221,19 @@ if __name__ == "__main__":
     data_p.process_stream(n_list)
     data_p.print_processors_stats()
 
-    
+    # Consume element by sending them to output
+    print("\nConsume some elements from the data processors: Numeric 3,"
+          " Text 2, Log 1")
+    # Numeric
+    for _ in range(3):
+        num_p.output()
+
+    # Text
+    for _ in range(2):
+        txt_p.output()
+
+    # Log
+    log_p.output()
+
+    # Mostrar estadísticas actualizadas
+    data_p.print_processors_stats()
