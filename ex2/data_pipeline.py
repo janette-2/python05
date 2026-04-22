@@ -144,7 +144,7 @@ class ExportPlugin(Protocol):
     # JSON and CSV exports
     # QUE ES ESOOO
     def process_output(self, data: list[tuple[int, str]]) -> None:
-        ...
+        pass
 
 
 class CSV_Export:
@@ -227,12 +227,13 @@ if __name__ == "__main__":
     print("Initialize Data Stream...\n")
     data_p.print_processors_stats()
 
-    print("Registering Processors")
+    print("\nRegistering Processors")
     txt_p = TextProcessor()
     num_p = NumericProcessor()
     log_p = LogProcessor()
-    data_p.register_processor(txt_p)
+
     data_p.register_processor(num_p)
+    data_p.register_processor(txt_p)
     data_p.register_processor(log_p)
 
     n_list = ['Hello world', [3.14, -1, 2.71], [{'log_level': 'WARNING',
@@ -247,21 +248,21 @@ if __name__ == "__main__":
     # Export a CSV (consume 3 elements each)
     print("\nSend 3 processed data from each processor to a CSV plugin:")
     data_p.output_pipeline(3, CSV_Export())
+    print("")
     data_p.print_processors_stats()
 
-    # Segundo envío de datos
     n_list2 = [21, ['I love AI', 'LLMs are wonderful', 'Stay healthy'],
                [{'log_level': 'ERROR', 'log_message': '500 server crash'},
                 {'log_level': 'NOTICE', 'log_message': 'Certificate expires in'
                 ' 10 days'}],
                [32, 42, 64, 84, 128, 168], 'World hello']
 
-    print(f"\nSend another batch of data: {n_list2}")
+    print(f"\nSend another batch of data: {n_list2}\n")
     data_p.process_stream(n_list2)
     data_p.print_processors_stats()
 
     # Export a JSON (consume 5 elements each)
     print("\nSend 5 processed data from each processor to a JSON plugin:")
     data_p.output_pipeline(5, JSON_Export())
+    print("")
     data_p.print_processors_stats()
-
