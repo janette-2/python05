@@ -120,6 +120,7 @@ class LogProcessor(DataProcessor):
 
         return False
 
+    # Union allows to detect different data types in this case
     def ingest(self, data: Union[Dict[str, str],
                                  List[Dict[str, str]]]) -> None:
         # Raises error if the data to be stored is not valid

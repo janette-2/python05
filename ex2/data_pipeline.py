@@ -142,7 +142,6 @@ class LogProcessor(DataProcessor):
 
 class ExportPlugin(Protocol):
     # JSON and CSV exports
-    # QUE ES ESOOO
     def process_output(self, data: list[tuple[int, str]]) -> None:
         pass
 
@@ -203,17 +202,20 @@ class DataStream:
             print(f"{name}: total {total} items processed,"
                   f" remaining {remaining} on processor")
 
+    # New method to combine the outputs of all the process
+    #  together into a plugin
     def output_pipeline(self, nb: int, plugin: ExportPlugin) -> None:
-        # nb: the amount of consumed elements after process_stream()
+        # nb: the amount of elements to be consumed after process_stream()
+        #  [validated and ingested if possible] from each of the processors
         for proc in self.processors:
             collected_data = []
             # Try to extract 'nb' elements of each processor
             for _ in range(nb):
                 try:
-                    # Using the output method of DataStream
+                    # Using the output method of DataStream (rank, value)
                     collected_data.append(proc.output())
                 except IndexError:
-                    # If there are no more elements, stopping
+                    # If there are no more elements in the processor, stopping
                     break
 
             if collected_data:
